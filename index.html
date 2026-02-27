@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Argide — AI Spanish Learning Search</title>
+<title>Argide — Spanish Learning Guide</title>
 
 <style>
   body {
@@ -78,16 +78,16 @@
 <body>
 
 <h1>Argide</h1>
-<div class="subtitle">AI-Powered Spanish Learning Search</div>
+<div class="subtitle">Spanish Learning Guide</div>
 
 <div class="search-container">
   <input id="searchBox"
-         placeholder="Try: present tense verbs OR Agreements | Spanish 1" />
+         placeholder="Spanish 1" />
   <button onclick="runAI()">Search</button>
 </div>
 
 <div class="status" id="status">
-Loading AI model… first time may take ~30–60 seconds.
+Loading...
 </div>
 
 <div class="output-box" id="output">
@@ -104,13 +104,14 @@ const searchBox = document.getElementById("searchBox");
 let engine;
 let modelReady = false;
 
-// 🚀 Load model
+// 🚀 Load a much smaller model
 async function initModel() {
   try {
-    statusEl.textContent = "Downloading AI model… (one-time setup)";
+    statusEl.textContent = "Downloading TinyLlama 1.1B model…";
     engine = new webllm.MLCEngine();
 
-    await engine.reload("Llama-3.1-8B-Instruct-q4f32_1");
+    // SMALLER model
+    await engine.reload("TinyLlama-1.1B-Chat-v1.0-q4f16_1");
 
     modelReady = true;
     statusEl.textContent = "✅ Argide ready.";
@@ -119,7 +120,7 @@ async function initModel() {
     console.error(err);
     statusEl.textContent = "❌ Failed to load model.";
     output.textContent =
-      "Model failed to load. Make sure you're using latest Chrome with WebGPU enabled.";
+      "Model failed to load. Make sure you are using Chrome or Edge with WebGPU enabled.";
   }
 }
 
