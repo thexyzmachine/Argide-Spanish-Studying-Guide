@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Argide — Spanish Learning Guide</title>
+<title>Argide — AI Spanish Learning Search</title>
 
 <style>
   body {
@@ -78,16 +78,16 @@
 <body>
 
 <h1>Argide</h1>
-<div class="subtitle">Spanish Learning Guide</div>
+<div class="subtitle">AI-Powered Spanish Learning Search</div>
 
 <div class="search-container">
   <input id="searchBox"
-         placeholder="Spanish 1" />
+         placeholder="Try: present tense verbs OR Agreements | Spanish 1" />
   <button onclick="runAI()">Search</button>
 </div>
 
 <div class="status" id="status">
-Loading...
+Checking WebGPU support…
 </div>
 
 <div class="output-box" id="output">
@@ -104,13 +104,27 @@ const searchBox = document.getElementById("searchBox");
 let engine;
 let modelReady = false;
 
-// 🚀 Load a much smaller model
+// 🚀 Check WebGPU availability
+async function checkWebGPU() {
+  if (!navigator.gpu) {
+    statusEl.textContent = "⚠️ WebGPU not available. Try latest Chrome/Edge with GPU acceleration enabled.";
+    output.textContent = "Argide requires WebGPU to run the AI model.";
+    return false;
+  }
+  return true;
+}
+
+// 🚀 Load TinyLlama on WebGPU
 async function initModel() {
+  if (!await checkWebGPU()) return;
+
   try {
     statusEl.textContent = "Downloading TinyLlama 1.1B model…";
-    engine = new webllm.MLCEngine();
 
-    // SMALLER model
+    engine = new webllm.MLCEngine({
+      backend: "webgpu" // force WebGPU
+    });
+
     await engine.reload("TinyLlama-1.1B-Chat-v1.0-q4f16_1");
 
     modelReady = true;
@@ -120,7 +134,7 @@ async function initModel() {
     console.error(err);
     statusEl.textContent = "❌ Failed to load model.";
     output.textContent =
-      "Model failed to load. Make sure you are using Chrome or Edge with WebGPU enabled.";
+      "Model failed to load. Make sure you are using Chrome/Edge with WebGPU enabled and hardware acceleration on.";
   }
 }
 
@@ -142,10 +156,8 @@ window.runAI = async function () {
 
   let prompt;
 
-  // ✨ Special format support
   if (text.includes("|")) {
     const parts = text.split("|");
-
     const topic = parts[0]?.trim() || "";
     const course = parts[1]?.trim() || "";
 
