@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Argide — AI Spanish Learning Search</title>
+
+<style>
+  body {
+    font-family: system-ui, Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+    margin: 0;
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    color: #94a3b8;
+    margin-bottom: 30px;
+  }
+
+  .search-container {
+    max-width: 700px;
+    margin: auto;
+    display: flex;
+    gap: 10px;
+  }
+
+  input {
+    flex: 1;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 12px;
+    border: none;
+    outline: none;
+  }
+
+  button {
+    padding: 14px 24px;
+    font-size: 16px;
+    border-radius: 12px;
+    border: none;
+    background: #22c55e;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #16a34a;
+  }
+
+  .output-box {
+    max-width: 900px;
+    margin: 30px auto;
+    background: #020617;
+    border-radius: 16px;
+    padding: 25px;
+    text-align: left;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    min-height: 180px;
+  }
+
+  .status {
+    color: #94a3b8;
+    margin-top: 15px;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Argide</h1>
+<div class="subtitle">AI-Powered Spanish Learning Search</div>
+
+<div class="search-container">
+  <input id="searchBox"
+         placeholder="Try: present tense verbs OR Agreements | Spanish 1" />
+  <button onclick="runAI()">Search</button>
+</div>
+
+<div class="status" id="status">
+Loading AI model… first time may take ~30–60 seconds.
+</div>
+
+<div class="output-box" id="output">
+Argide is starting up…
+</div>
+
+<script type="module">
+import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+const output = document.getElementById("output");
+const statusEl = document.getElementById("status");
+const searchBox = document.getElementById("searchBox");
+
+let engine;
+let modelReady = false;
+
+// 🚀 Load model
+async function initModel() {
+  try {
+    statusEl.textContent = "Downloading AI model… (one-time setup)";
+    engine = new webllm.MLCEngine();
+
+    await engine.reload("Llama-3.1-8B-Instruct-q4f32_1");
+
+    modelReady = true;
+    statusEl.textContent = "✅ Argide ready.";
+    output.textContent = "Ask something about Spanish learning!";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "❌ Failed to load model.";
+    output.textContent =
+      "Model failed to load. Make sure you're using latest Chrome with WebGPU enabled.";
+  }
+}
+
+initModel();
+
+// 🧠 Main search function
+window.runAI = async function () {
+  if (!modelReady) {
+    output.textContent = "⏳ Model still loading… please wait.";
+    return;
+  }
+
+  const text = searchBox.value.trim();
+
+  if (!text) {
+    output.textContent = "⚠️ Please type something.";
+    return;
+  }
+
+  let prompt;
+
+  // ✨ Special format support
+  if (text.includes("|")) {
+    const parts = text.split("|");
+
+    const topic = parts[0]?.trim() || "";
+    const course = parts[1]?.trim() || "";
+
+    prompt = `
+You are Argide, an AI Spanish learning assistant.
+
+Find Spanish learning topics for:
+
+Topic: ${topic}
+Course Level: ${course}
+
+Provide:
+- Key concepts
+- What to study
+- Helpful resources
+- Related topics
+`;
+  } else {
+    prompt = `
+You are Argide, an AI Spanish learning assistant.
+
+Please find resources for learning: ${text}
+
+Provide:
+- Explanation
+- What to study
+- Helpful resources
+- Related Spanish topics
+`;
+  }
+
+  output.textContent = "🧠 Thinking…";
+
+  try {
+    const reply = await engine.chat.completions.create({
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a helpful and clear Spanish learning assistant."
+        },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    });
+
+    output.textContent = reply.choices[0].message.content;
+  } catch (err) {
+    console.error(err);
+    output.textContent = "❌ Error generating response.";
+  }
+};
+
+// ⌨️ Enter key support
+searchBox.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") runAI();
+});
+</script>
+
+</body>
+</html>
