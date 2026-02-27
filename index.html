@@ -87,7 +87,7 @@
 </div>
 
 <div class="status" id="status">
-Checking WebGPU support…
+Checking environment…
 </div>
 
 <div class="output-box" id="output">
@@ -104,37 +104,25 @@ const searchBox = document.getElementById("searchBox");
 let engine;
 let modelReady = false;
 
-// 🚀 Check WebGPU availability
-async function checkWebGPU() {
-  if (!navigator.gpu) {
-    statusEl.textContent = "⚠️ WebGPU not available. Try latest Chrome/Edge with GPU acceleration enabled.";
-    output.textContent = "Argide requires WebGPU to run the AI model.";
-    return false;
-  }
-  return true;
-}
-
-// 🚀 Load TinyLlama on WebGPU
+// 🚀 Load TinyLlama on CPU/WASM
 async function initModel() {
-  if (!await checkWebGPU()) return;
-
   try {
-    statusEl.textContent = "Downloading TinyLlama 1.1B model…";
+    statusEl.textContent = "Loading TinyLlama 1.1B model (CPU/WebAssembly)…";
 
     engine = new webllm.MLCEngine({
-      backend: "webgpu" // force WebGPU
+      backend: "wasm" // force CPU/WebAssembly mode
     });
 
     await engine.reload("TinyLlama-1.1B-Chat-v1.0-q4f16_1");
 
     modelReady = true;
-    statusEl.textContent = "✅ Argide ready.";
+    statusEl.textContent = "✅ Argide ready (no GPU required).";
     output.textContent = "Ask something about Spanish learning!";
   } catch (err) {
     console.error(err);
     statusEl.textContent = "❌ Failed to load model.";
     output.textContent =
-      "Model failed to load. Make sure you are using Chrome/Edge with WebGPU enabled and hardware acceleration on.";
+      "Model failed to load. Make sure you are using a modern browser.";
   }
 }
 
